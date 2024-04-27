@@ -6,9 +6,11 @@ from abc import ABC, abstractmethod
 
 class RandomWalker(ABC):
 
-    MOVES = np.array([(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)])
-
     def __init__(self, node_count, grid_size):
+
+        if grid_size > 100:
+            raise ValueError("grid_size must be a number < 100")
+
         self.node_count = node_count
         self.grid_size = grid_size
         self.path = self.create_path()
@@ -50,20 +52,21 @@ class RandomWalker(ABC):
         print(f"has been filled in {self.get_ratio(len(self.path), self.get_grid_volume())}%")
         print(f"the path is {self.path_completeness_ratio()}% complete")
 
-    
 class SARW(RandomWalker):
 
     def __init__(self, node_count, grid_size):
         super().__init__(node_count, grid_size)
 
     def create_path(self):
-        print("creating a path for simple walker")
+
+        MOVES = np.array([(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)])
+
         visited = set()
         pos = (0, 0, 0)
         path = [pos]
 
         for i in range(self.node_count):
-            move = random.choice(self.MOVES)
+            move = random.choice(MOVES)
             new_pos = tuple(x + y for x, y in zip(pos, move))
 
             if any(abs(coord) > self.grid_size for coord in new_pos):
@@ -76,3 +79,17 @@ class SARW(RandomWalker):
             path.append(pos)
 
         return path
+
+class AdvancedSARW(RandomWalker):
+
+    def __init__(self, node_count, grid_size):
+        super().__init__(node_count, grid_size)
+
+    def create_path(self):
+        
+        shape = np.repeat(self.grid_size*2+1, 3)
+        visited = np.full(shape, False, dtype=bool)
+        
+        current_position = (0,0,0)
+        visited[current_position] = True
+        print(visited)

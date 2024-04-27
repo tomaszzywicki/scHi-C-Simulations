@@ -1,4 +1,5 @@
 import model_init
+import validator
 
-walk = model_init.SARW(1000, 10)
-print(walk.n, walk.grid_size)
+validator = validator.WalkerValidator(model_init.SARW)
+validator.run()

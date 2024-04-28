@@ -5,3 +5,5 @@ class WalkerValidator:
 
     def run(self):
         print(self.Walker(1000, 100))
+
+    

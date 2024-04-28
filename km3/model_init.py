@@ -90,6 +90,55 @@ class AdvancedSARW(RandomWalker):
         shape = np.repeat(self.grid_size*2+1, 3)
         visited = np.full(shape, False, dtype=bool)
         
-        current_position = (0,0,0)
-        visited[current_position] = True
-        print(visited)
+        self.current_position = (0,0,0)
+        visited[self.current_position] = True
+        
+        for i in range(1):
+        # for i in range(self.node_count-1):
+            next_position = self.get_next_position()
+            visited[next_position] = True
+            self.current_position = next_position
+
+    def get_next_position(self):
+
+        # wszystkie pozycje oddalone o max 3 miejsca
+        # bierzemy tylko te co mieszczą się w gridzie
+        # bierzemy tylko te co nie są już zajęte
+        
+        # jeżeli lista potencjalnych pozycji nie jest pusta to zwracamy losową z nich
+        # jeżeli jest to dodajemy pozycje oddalone o 4, potem o 5 itd
+
+        candidates = self.get_pos_within_distance([i+1 for i in range(1)])
+        print(candidates)
+        return self.current_position
+
+    def get_pos_within_distance(self, distance):
+        
+        positions = np.array([])
+        for d in distance:
+            for dx in range(0,d+1):
+                for dy in range(0,d+1-dx):
+                    dz = d-(dx + dy)
+
+                    # print("dx, dy, dz = ", dx, dy, dz)
+
+                    MOVES = np.array([
+                        (dx, dy, dz),
+                        (dx, dy, -dz),
+                        (dx, -dy, dz),
+                        (dx, -dy, -dz),
+                        (dx, dy, dz),
+                        (dx, dy, -dz),
+                        (dx, -dy, dz),
+                        (dx, -dy, -dz)
+                    ])
+                    
+
+                    new_positions  = np.array([])
+                    for move in MOVES:
+                        new_positions = np.append(new_positions, tuple(x + y for x, y in zip(self.current_position, move)))
+                    new_positions = np.unique(new_positions)
+                    positions = np.append(positions, new_positions)
+
+        return positions
+

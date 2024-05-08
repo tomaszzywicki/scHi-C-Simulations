@@ -13,8 +13,6 @@ class RandomWalker(ABC):
         self.walk = self.create_walk()
 
     def __str__(self):
-        # for field in self.walk:
-        #     print(field)
         return f"Self Avoiding Random Walk:\n\tnode_count = {self.node_count}\n\tgrid_size = {self.grid.size}"
 
     @abstractmethod

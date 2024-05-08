@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import random
 import math
 import copy
+import pickle
 
 import model_init
 
@@ -199,3 +200,11 @@ class Model():
         
         return result
         
+    def save_to_file(self, file_path):
+        with open(file_path, 'wb') as file:
+            pickle.dump(self, file)
+
+    @staticmethod
+    def load_from_file(file_path):
+        with open(file_path, 'rb') as file:
+            return pickle.load(file)

@@ -24,9 +24,14 @@ data.isolate_chromosome("1")
 data.prep(resolution=5e5)
 # data.plot_matrix(data.theta_matrix)
 
+# model = model_evolver.Model(data)
+# model.path.plot2()
+# model.evolve()
+# print(model.evaluate(model.path.walk))
+# model.path.plot2()
+
 model = model_evolver.Model(data)
 model.path.plot2()
-model.evolve()
-print(model.evaluate(model.path.walk))
+model.save_to_file("test_model.pkl")
+model.evolve(iterations=5)
 model.path.plot2()
-

@@ -207,6 +207,15 @@ class Field():
     def __str__(self):
         return f"Field: ({self.x}, {self.y}, {self.z})"
 
+    @staticmethod
+    def get_distance(field1, field2):
+        distance = pow(
+            pow(abs(field1.x - field2.x), 2) + 
+            pow(abs(field1.y - field2.y), 2) + 
+            pow(abs(field1.z - field2.z), 2),
+            1/2)
+        return distance
+
     def get_neighbours_at_distance(self, distance):
 
         neighbours = np.empty(0, dtype=Field)

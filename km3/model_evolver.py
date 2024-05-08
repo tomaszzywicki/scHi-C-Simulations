@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 import math
+import copy
 
 import model_init
 
@@ -17,7 +19,7 @@ class scData():
         self.chromosomes = self.get_all_chromosomes()
         self.bin_count = self.chromosomes.iloc[-1]["last_bin"] + 1
         self.contact_matrix = self.generate_contact_matrix()
-        # self.theta_matrix = self.generate_theta_matrix()
+        self.theta_matrix = self.generate_theta_matrix()
 
     def generate_contact_matrix(self):
         contact_matrix = np.zeros((self.bin_count, self.bin_count), dtype=int)
@@ -98,13 +100,12 @@ class scData():
         d0 = self.bin_count
         theta_matrix = np.zeros((self.bin_count, self.bin_count))
 
+        print("preping theta matrix...")
         contacts = self.get_contacts()
-        print(contacts)
 
-        print(self.bin_count)
         for i in range(self.bin_count-1):
+            print(i, " of ", self.bin_count)
             for j in range(i+1, self.bin_count):
-                print(i, j)
                 value = 0
 
                 for bin_index1, bin_index2 in contacts:
@@ -113,7 +114,8 @@ class scData():
                     value += self.zyrafa(i, j, bin_index1, bin_index2)
 
                 theta_matrix[i][j] = min(1, value)
-                print(value)
+
+        return theta_matrix
 
     def zyrafa(self, i, j, x, y):
 
@@ -132,19 +134,68 @@ class Model():
         
         self.path = model_init.AdvancedSARW(self.data.bin_count, 100)
 
-    def evolve(self, iterations=1e3):
-        pass
+    def evolve(self, iterations=500):
 
-        # generate siblings
-        # evaluate siblings
-        # choose the best sibling model
+        
+        for i in range(iterations):
 
+            best_evaluation = self.evaluate(self.path.walk)
+            print(f"after iteration {i}: ", best_evaluation)
+            best_candidate = self.path.walk
+            candidates = self.generate_sibling_walks()
+            for candidate in candidates:
+                evaluation = self.evaluate(candidate)
+                if evaluation < best_evaluation:
+                    best_evaluation = evaluation
+                    best_candidate = candidate
+                
+            self.path.walk = best_candidate
 
-    def next_generation(self):
-        pass
+    def generate_sibling_walks(self, count=30, index_to_modify=None):
 
-    def generate_siblings(self, count=1e2):
-        pass
+        if not index_to_modify:
+            index_to_modify = random.randint(0, self.data.bin_count-1)
 
-    def evaluate(self):
-        pass
+        new_walks = []
+        for i in range(count):
+            new_walk = copy.deepcopy(self.path.walk)
+            new_walk[index_to_modify].x += random.randint(-5,5)
+            new_walk[index_to_modify].y += random.randint(-5,5)
+            new_walk[index_to_modify].z += random.randint(-5,5)
+            new_walks.append(new_walk)
+
+        return new_walks
+
+    def delta(self, i, j):
+        return self.delta0 / pow(min(1, self.data.theta_matrix[i][j]), 1/3)
+
+    @property
+    def delta1(self):
+        return self.delta0 / pow(min(1, self.theta1), 1/3)
+
+    def d(self, walk, i, j):
+        
+        return model_init.Field.get_distance(walk[i], walk[j])
+
+    def evaluate(self, walk):
+
+        self.delta0 = 8
+        self.theta1 = 0.7
+        self.beta = 1
+        self.tau = 1
+        self.mu1 = 20
+        self.rho = 1
+        self.phi = 0.1
+        
+        result = 0
+        for i in range(self.data.bin_count-1):
+            for j in range(i+1, self.data.bin_count):
+                if self.data.contact_matrix[i][j] >= 1 or self.data.theta_matrix[i][j] == 1:
+                    result += pow(self.d(walk, i, j) - self.delta0, 2) / pow(self.delta0, 2)
+                elif self.theta1 < self.data.theta_matrix[i][j]:
+                    result += self.beta * (1 - math.exp(-(pow(self.d(walk, i, j) - self.delta(i, j), 2) / self.mu1)))
+                else:
+                    result += self.tau * (1 - 1 / (1 + math.exp(-(self.d(walk, i, j) - (self.delta1 - self.rho)) / self.phi)))
+        
+        return result
+        

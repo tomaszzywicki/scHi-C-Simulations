@@ -21,9 +21,12 @@ import model_evolver
 
 data = model_evolver.scData('data/GSM1173493_cell-1.txt')
 data.isolate_chromosome("1")
-data.prep(resolution=1e6)
-data.plot_matrix(data.contact_matrix)
+data.prep(resolution=5e5)
+# data.plot_matrix(data.theta_matrix)
+
 model = model_evolver.Model(data)
 model.path.plot2()
-model.path.show_info()
-print(model.path)
+model.evolve()
+print(model.evaluate(model.path.walk))
+model.path.plot2()
+

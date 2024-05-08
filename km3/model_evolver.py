@@ -7,14 +7,15 @@ import model_init
 
 class scData():
     
-    def __init__(self, filepath, sep='\t', resolution=1e6):
+    def __init__(self, filepath, sep='\t', resolution=1e7):
         self.df = pd.read_csv(filepath, sep=sep)
         self.resolution = resolution
+        
+    def prep(self):
         self.chromosomes = self.get_all_chromosomes()
-        print(self.chromosomes)
         self.bin_count = self.chromosomes.iloc[-1]["last_bin"] + 1
         self.contact_matrix = self.generate_contact_matrix()
-        self.plot_contact_matrix()
+        self.theta_matrix = self.generate_theta_matrix()
 
     def generate_contact_matrix(self):
         contact_matrix = np.zeros((self.bin_count, self.bin_count), dtype=int)
@@ -22,16 +23,18 @@ class scData():
         for _, row in self.df.iterrows():
             bin_index1 = (self.get_bin(row["chrom1"], row["coord1"]))
             bin_index2 = (self.get_bin(row["chrom2"], row["coord2"]))
+            if (bin_index1 == bin_index2):
+                continue
 
             contact_matrix[bin_index1, bin_index2] += 1
             contact_matrix[bin_index2, bin_index1] += 1
 
         return contact_matrix
 
-    def plot_contact_matrix(self):
+    def plot_matrix(self, matrix):
 
         plt.figure(figsize=(8, 6))
-        plt.imshow(self.contact_matrix, cmap='Reds', interpolation='nearest')
+        plt.imshow(matrix, cmap='Reds', interpolation='nearest')
         plt.colorbar()
         plt.xlabel('Genomic Bins')
         plt.ylabel('Genomic Bins')
@@ -76,6 +79,43 @@ class scData():
         bin = int((coord - record["min_coord"]) // bin_size)
         return bin + record["first_bin"]
 
+    def get_contacts(self):
+        
+        contacts = []
+        for i in range(self.bin_count-1):
+            for j in range(i+1, self.bin_count):
+                if self.contact_matrix[i][j] > 0:
+                    contacts.append((i, j))
+        return contacts
+
+    def generate_theta_matrix(self):
+        
+        d0 = self.bin_count
+        theta_matrix = np.zeros((self.bin_count, self.bin_count))
+
+        contacts = self.get_contacts()
+        print(contacts)
+
+        print(self.bin_count)
+        for i in range(self.bin_count-1):
+            for j in range(i+1, self.bin_count):
+                print(i, j)
+                value = 0
+
+                for bin_index1, bin_index2 in contacts:
+                    if abs(bin_index1 - i) > d0 or abs(bin_index2 - j) > d0:
+                        continue
+                    value += self.zyrafa(i, j, bin_index1, bin_index2)
+
+                theta_matrix[i][j] = min(1, value)
+                print(value)
+
+    def zyrafa(self, i, j, x, y):
+
+        mu2 = 2
+        return math.exp(-(pow(x-i, 2) / mu2 + pow(y-j, 2) / mu2))
+        
+
 class Model():
 
     def __init__(self, data):
@@ -104,4 +144,3 @@ class Model():
 
     def evaluate(self):
         pass
-    

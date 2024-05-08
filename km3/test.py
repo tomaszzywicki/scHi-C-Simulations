@@ -17,4 +17,7 @@ import model_evolver
 # walk.plot()
 
 data = model_evolver.scData('data/GSM1173493_cell-1.txt')
+# data.isolate_chromosome("5")
+# data.isolate_chromosome("X")
+data.prep()
 model = model_evolver.Model(data)

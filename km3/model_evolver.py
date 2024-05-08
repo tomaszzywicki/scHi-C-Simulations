@@ -7,15 +7,17 @@ import model_init
 
 class scData():
     
-    def __init__(self, filepath, sep='\t', resolution=1e7):
+    def __init__(self, filepath, sep='\t', chromosome=None):
         self.df = pd.read_csv(filepath, sep=sep)
-        self.resolution = resolution
+        if chromosome:
+            self.isolate_chromosome(chromosome)
         
-    def prep(self):
+    def prep(self, resolution=1e7):
+        self.resolution = resolution
         self.chromosomes = self.get_all_chromosomes()
         self.bin_count = self.chromosomes.iloc[-1]["last_bin"] + 1
         self.contact_matrix = self.generate_contact_matrix()
-        self.theta_matrix = self.generate_theta_matrix()
+        # self.theta_matrix = self.generate_theta_matrix()
 
     def generate_contact_matrix(self):
         contact_matrix = np.zeros((self.bin_count, self.bin_count), dtype=int)
@@ -57,6 +59,9 @@ class scData():
             end_bin += bin_count
         
         return pd.DataFrame(records)
+
+    def isolate_chromosome(self, chromosome):
+        self.df = self.df[(self.df["chrom1"] == chromosome) & (self.df["chrom2"] == chromosome)]
 
     def get_coordinate_range(self, chromosome):
         df_for_chromosome = self.df[(self.df['chrom1'] == chromosome) & (self.df["chrom2"] == chromosome)]

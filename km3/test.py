@@ -16,8 +16,11 @@ import model_evolver
 # walk.show_info()
 # walk.plot()
 
+# data = model_evolver.scData('data/GSM1173493_cell-1.txt', chromosome="2")
+# data.prep()
+
 data = model_evolver.scData('data/GSM1173493_cell-1.txt')
-# data.isolate_chromosome("5")
-# data.isolate_chromosome("X")
-data.prep()
-model = model_evolver.Model(data)
+data.isolate_chromosome("5")
+data.prep(resolution=1e6)
+# data.plot_matrix(data.contact_matrix)
+# model = model_evolver.Model(data)

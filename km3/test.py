@@ -20,7 +20,10 @@ import model_evolver
 # data.prep()
 
 data = model_evolver.scData('data/GSM1173493_cell-1.txt')
-data.isolate_chromosome("5")
+data.isolate_chromosome("1")
 data.prep(resolution=1e6)
-# data.plot_matrix(data.contact_matrix)
-# model = model_evolver.Model(data)
+data.plot_matrix(data.contact_matrix)
+model = model_evolver.Model(data)
+model.path.plot2()
+model.path.show_info()
+print(model.path)

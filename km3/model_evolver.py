@@ -130,8 +130,7 @@ class Model():
         # determine bin count -> will be the node count for sarw
         # determine grid_size -> dependant on i don't know what yet
         
-        # self.path = model_init.AdvancedSARW()
-
+        self.path = model_init.AdvancedSARW(self.data.bin_count, 100)
 
     def evolve(self, iterations=1e3):
         pass

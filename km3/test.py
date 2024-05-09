@@ -1,5 +1,3 @@
-import model_init
-import validator
 import model_evolver
 
 scHIC_file_path = "data/GSM1173493_cell-1.txt"
@@ -15,16 +13,16 @@ def initialize_model(chromosome=None, resolution=1e6):
 def load_model(file_path="models/test_model.pkl"):
     return model_evolver.Model.load_from_file(file_path)
 
-# model = initialize_model(chromosome="1", resolution=1e6)
-# model.path.plot2()
-# model.evolve(iterations=50)
-# model.path.plot2()
-# model.save_to_file(model_file_path)
 
-model = load_model()
-model.path.plot2()
-model.evolve(iterations=100)
-model.path.plot2()
-model.save_to_file(model_file_path)
+if __name__ == "__main__":
+    model = load_model(file_path="model_delta_5_1500.pkl")
+    model.path.plot2()
+    # model.evolve(iterations=500)
+    # model.path.plot2()
+    # model.save_to_file("model_delta_5_2000.pkl")
 
+    # model1 = load_model(file_path="model_delta_5_1000.pkl")
+    # model2 = load_model(file_path="model_delta_5_1500.pkl")
 
+    # model1.path.plot2()
+    # model2.path.plot2()

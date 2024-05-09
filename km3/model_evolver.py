@@ -143,7 +143,8 @@ class Model():
             best_evaluation = self.evaluate(self.path.walk)
             print(f"after iteration {i}: ", round(best_evaluation, 2))
             best_candidate = self.path.walk
-            candidates = self.generate_sibling_walks()
+            # candidates = self.generate_sibling_walks(step=0.5)
+            candidates = self.generate_sibling_walks(step=20)
             for candidate in candidates:
                 evaluation = self.evaluate(candidate)
                 if evaluation < best_evaluation:
@@ -152,7 +153,7 @@ class Model():
                 
             self.path.walk = best_candidate
 
-    def generate_sibling_walks(self, count=10, index_to_modify=None):
+    def generate_sibling_walks(self, count=10, index_to_modify=None, step=5):
 
         if not index_to_modify:
             index_to_modify = random.randint(0, self.data.bin_count-1)
@@ -160,9 +161,9 @@ class Model():
         new_walks = []
         for i in range(count):
             new_walk = copy.deepcopy(self.path.walk)
-            new_walk[index_to_modify].x += random.uniform(-5,5)
-            new_walk[index_to_modify].y += random.uniform(-5,5)
-            new_walk[index_to_modify].z += random.uniform(-5,5)
+            new_walk[index_to_modify].x += random.uniform(-step,step)
+            new_walk[index_to_modify].y += random.uniform(-step,step)
+            new_walk[index_to_modify].z += random.uniform(-step,step)
             new_walks.append(new_walk)
 
         return new_walks
@@ -180,7 +181,7 @@ class Model():
 
     def evaluate(self, walk):
 
-        self.delta0 = 8
+        self.delta0 = 5
         self.theta1 = 0.7
         self.beta = 1
         self.tau = 1

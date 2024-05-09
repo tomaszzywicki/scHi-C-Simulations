@@ -1,7 +1,7 @@
 import model_evolver
 
 scHIC_file_path = "data/GSM1173493_cell-1.txt"
-model_file_path = "models/test_model.pkl"
+model_file_path = "test_model.pkl"
 
 def initialize_model(chromosome=None, resolution=1e6):
     data = model_evolver.scData(scHIC_file_path)
@@ -10,7 +10,7 @@ def initialize_model(chromosome=None, resolution=1e6):
     data.prep(resolution=resolution)
     return model_evolver.Model(data)
 
-def load_model(file_path="models/test_model.pkl"):
+def load_model(file_path="test_model.pkl"):
     return model_evolver.Model.load_from_file(file_path)
 
 
@@ -20,9 +20,3 @@ if __name__ == "__main__":
     # model.evolve(iterations=500)
     # model.path.plot2()
     # model.save_to_file("model_delta_5_2000.pkl")
-
-    # model1 = load_model(file_path="model_delta_5_1000.pkl")
-    # model2 = load_model(file_path="model_delta_5_1500.pkl")
-
-    # model1.path.plot2()
-    # model2.path.plot2()

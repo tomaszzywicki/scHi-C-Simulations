@@ -119,32 +119,32 @@ class scData():
         return theta_matrix
 
     def zyrafa(self, i, j, x, y):
-
         mu2 = 2
         return math.exp(-(pow(x-i, 2) / mu2 + pow(y-j, 2) / mu2))
+
+    def save_to_file(self, file_path):
+        with open(file_path, 'wb') as file:
+            pickle.dump(self, file)
+
+    @staticmethod
+    def load_from_file(file_path):
+        with open(file_path, 'rb') as file:
+            return pickle.load(file)
         
 
 class Model():
 
     def __init__(self, data):
         self.data = data
-
-        # dependant on the data
-        # determine bin count -> will be the node count for sarw
-        # determine grid_size -> dependant on i don't know what yet
-        
         self.path = model_init.AdvancedSARW(self.data.bin_count, 100)
 
-    def evolve(self, iterations=500):
-
+    def evolve(self, iterations=500, aggression=10):
         
         for i in range(iterations):
-
             best_evaluation = self.evaluate(self.path.walk)
             print(f"after iteration {i}: ", round(best_evaluation, 2))
             best_candidate = self.path.walk
-            # candidates = self.generate_sibling_walks(step=0.5)
-            candidates = self.generate_sibling_walks(step=20)
+            candidates = self.generate_sibling_walks(step=aggression)
             for candidate in candidates:
                 evaluation = self.evaluate(candidate)
                 if evaluation < best_evaluation:

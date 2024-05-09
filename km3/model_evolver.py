@@ -141,7 +141,7 @@ class Model():
         for i in range(iterations):
 
             best_evaluation = self.evaluate(self.path.walk)
-            print(f"after iteration {i}: ", best_evaluation)
+            print(f"after iteration {i}: ", round(best_evaluation, 2))
             best_candidate = self.path.walk
             candidates = self.generate_sibling_walks()
             for candidate in candidates:
@@ -152,7 +152,7 @@ class Model():
                 
             self.path.walk = best_candidate
 
-    def generate_sibling_walks(self, count=30, index_to_modify=None):
+    def generate_sibling_walks(self, count=10, index_to_modify=None):
 
         if not index_to_modify:
             index_to_modify = random.randint(0, self.data.bin_count-1)
@@ -160,9 +160,9 @@ class Model():
         new_walks = []
         for i in range(count):
             new_walk = copy.deepcopy(self.path.walk)
-            new_walk[index_to_modify].x += random.randint(-5,5)
-            new_walk[index_to_modify].y += random.randint(-5,5)
-            new_walk[index_to_modify].z += random.randint(-5,5)
+            new_walk[index_to_modify].x += random.uniform(-5,5)
+            new_walk[index_to_modify].y += random.uniform(-5,5)
+            new_walk[index_to_modify].z += random.uniform(-5,5)
             new_walks.append(new_walk)
 
         return new_walks

@@ -2,36 +2,29 @@ import model_init
 import validator
 import model_evolver
 
-# validator = validator.WalkerValidator(model_init.AdvancedSARW)
-# validator = validator.WalkerValidator(model_init.SARW)
-# validator.run()
+scHIC_file_path = "data/GSM1173493_cell-1.txt"
+model_file_path = "models/test_model.pkl"
 
-# walk = model_init.AdvancedSARW(int(1e4), 40)
-# print(walk)
-# walk.show_info()
-# walk.plot2()
+def initialize_model(chromosome=None, resolution=1e6):
+    data = model_evolver.scData(scHIC_file_path)
+    if chromosome:
+        data.isolate_chromosome(chromosome)
+    data.prep(resolution=resolution)
+    return model_evolver.Model(data)
 
-# walk = model_init.SARW(10000,40)
-# print(walk)
-# walk.show_info()
-# walk.plot()
+def load_model(file_path="models/test_model.pkl"):
+    return model_evolver.Model.load_from_file(file_path)
 
-# data = model_evolver.scData('data/GSM1173493_cell-1.txt', chromosome="2")
-# data.prep()
-
-data = model_evolver.scData('data/GSM1173493_cell-1.txt')
-data.isolate_chromosome("1")
-data.prep(resolution=5e5)
-# data.plot_matrix(data.theta_matrix)
-
-# model = model_evolver.Model(data)
+# model = initialize_model(chromosome="1", resolution=1e6)
 # model.path.plot2()
-# model.evolve()
-# print(model.evaluate(model.path.walk))
+# model.evolve(iterations=50)
 # model.path.plot2()
+# model.save_to_file(model_file_path)
 
-model = model_evolver.Model(data)
+model = load_model()
 model.path.plot2()
-model.save_to_file("test_model.pkl")
-model.evolve(iterations=5)
+model.evolve(iterations=100)
 model.path.plot2()
+model.save_to_file(model_file_path)
+
+

@@ -138,6 +138,14 @@ class Model():
         self.data = data
         self.path = model_init.AdvancedSARW(self.data.bin_count, 100)
 
+        self.delta0 = 5
+        self.theta1 = 0.7
+        self.beta = 1
+        self.tau = 1
+        self.mu1 = 20
+        self.rho = 1
+        self.phi = 0.1
+
     def evolve(self, iterations=500, aggression=10):
         
         for i in range(iterations):
@@ -181,14 +189,6 @@ class Model():
 
     def evaluate(self, walk):
 
-        self.delta0 = 5
-        self.theta1 = 0.7
-        self.beta = 1
-        self.tau = 1
-        self.mu1 = 20
-        self.rho = 1
-        self.phi = 0.1
-        
         result = 0
         for i in range(self.data.bin_count-1):
             for j in range(i+1, self.data.bin_count):

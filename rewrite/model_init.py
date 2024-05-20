@@ -1,5 +1,4 @@
 import numpy as np
-import random
 import matplotlib.pyplot as plt
 
 from abc import ABC, abstractmethod
@@ -84,12 +83,14 @@ class RandomWalk(ABC):
         return self.volume - self.filled_fields
 
     
-class AdvancedSARW(RandomWalk):
+class SARW(RandomWalk):
 
     def __init__(self, node_count, grid_size):
         super().__init__(node_count, grid_size)
 
     def create_walk(self):
+        # overall time complexity: n^2
+        # could be nlogn, but implementation hasn't yet proved to be worth the hassle
         super().create_walk()
 
         self.walk = np.empty(self.node_count, dtype=Field)

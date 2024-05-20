@@ -15,14 +15,7 @@ def load_model(file_path="models/test_model.pkl"):
 
 
 if __name__ == "__main__":
-    model = load_model(file_path="model_delta_5_1500.pkl")
+    model = load_model(file_path=model_file_path)
     model.path.plot2()
-    # model.evolve(iterations=500)
-    # model.path.plot2()
-    # model.save_to_file("model_delta_5_2000.pkl")
-
-    # model1 = load_model(file_path="model_delta_5_1000.pkl")
-    # model2 = load_model(file_path="model_delta_5_1500.pkl")
-
-    # model1.path.plot2()
-    # model2.path.plot2()
+    model.evolve(iterations=100)
+    model.path.plot2()

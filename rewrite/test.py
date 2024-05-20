@@ -4,8 +4,9 @@ import model_evolver
 node_count = int(1e4)
 grid_size = int(1e2)
 data_file_path = "data/GSM1173493_cell-1.txt"
-chrom5_data = "data/chrom5_1e6.pkl"
 chrom_num = "5"
+resolution = int(1e6)
+chrom5_data = f"data/chrom{chrom_num}_{resolution}.pkl"
 
 if __name__ == "__main__":
     # data = model_evolver.scData(data_file_path)

@@ -5,6 +5,7 @@ import random
 import pickle
 import math
 import copy
+from scipy.stats import chi2
 
 import model_init
 
@@ -174,21 +175,26 @@ class Model(Savable):
 
         self.evaluation_score = self.evaluate(self.walk.walk)
 
+    def score_to_prob(self, score):
+        percentage = (score - self.evaluation_score) / self.evaluation_score * 100
+        x = max(0, 3 + percentage)
+        print(f"score: {score}\tcurrent score: {self.evaluation_score}\tpercentage: {percentage}\tx: {x}")
+        return chi2.pdf(x, 2)
+        
+
     def evolve(self, iterations=500, step=5):
 
         for i in range(iterations):
-            best_evaluation = self.evaluation_score
-            print(f"after iteration {i}: ", round(best_evaluation, 2))
-            best_candidate = self.walk.walk
-            candidates, changed_index = self.generate_sibling_walks(step=step)
-            for candidate in candidates:
-                evaluation = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
-                if evaluation < best_evaluation:
-                    best_evaluation = evaluation
-                    best_candidate = candidate
-                
-            self.walk.walk = best_candidate
-            self.evaluation_score = best_evaluation
+            print(f"after iteration {i}: {round(self.evaluation_score,2)}")
+            candidate, changed_index = self.generate_sibling_walks(count=1, step=step)
+            candidate_score = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
+            candidate_prob = self.score_to_prob(candidate_score)
+            print(f"candidate prob: {round(candidate_prob,2)}")
+            acceptance_prob = min(1, candidate_prob)
+            if random.uniform(0, 1) < acceptance_prob:
+                self.walk.walk = candidate
+                self.evaluation_score = candidate_score
+
 
     def generate_sibling_walks(self, count=10, index_to_modify=None, step=5):
         if not index_to_modify:
@@ -201,6 +207,9 @@ class Model(Savable):
             new_walk[index_to_modify].y += random.uniform(-step,step)
             new_walk[index_to_modify].z += random.uniform(-step,step)
             new_walks.append(new_walk)
+
+        if len(new_walks) == 1:
+            return new_walks[0], index_to_modify
 
         return new_walks, index_to_modify
     

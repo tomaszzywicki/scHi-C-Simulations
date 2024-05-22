@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import pickle
 import math
 
+import model_init
+
 class Savable():
 
     def save(self, file_path):
@@ -18,12 +20,19 @@ class Savable():
 class scData(Savable):
 
     def __init__(self, filepath, sep='\t'):
-        self.df = pd.read_csv(filepath, sep=sep)
+        self.base_df = pd.read_csv(filepath, sep=sep)
+        self.resolution = None
+        self.chromosome = None
+        self.contact_matrix = None
+        self.theta_matrix = None
     
     def prep(self, chromosome=None, resolution=1e7):
-        if chromosome:
-            self.isolate_chromosome(chromosome)
-        self.resolution = resolution
+        self.isolate_chromosome(chromosome)
+        if not chromosome:
+            self.chromosome = "ALL"
+        else:
+            self.chromosome = chromosome
+        self.resolution = int(resolution)
         self.chromosomes = self.get_all_chromosomes()
         self.bin_count = self.chromosomes.iloc[-1]["last_bin"] + 1
         self.contact_matrix = self.generate_contact_matrix()
@@ -49,16 +58,20 @@ class scData(Savable):
         plt.xlabel('Genomic Bins')
         plt.ylabel('Genomic Bins')
         plt.show()
-
-    def get_all_chromosomes(self):
-        chromosomes1 = self.df["chrom1"].unique()
-        chromosomes2 = self.df["chrom2"].unique()
+    
+    def get_chromosome_list(self):
+        chromosomes1 = self.base_df["chrom1"].unique()
+        chromosomes2 = self.base_df["chrom2"].unique()
         chrom_list = np.unique(np.concatenate((chromosomes1, chromosomes2), axis=0))
         sorted_chromosomes = sorted(chrom_list, key=lambda x: int(x) if x.isdigit() else float('inf'))
+        return sorted_chromosomes
 
+    def get_all_chromosomes(self):
+        chromosomes = self.get_chromosome_list()
+        print(chromosomes)
         records = []
         end_bin = -1
-        for chromosome in sorted_chromosomes:
+        for chromosome in chromosomes:
             min_coord, max_coord = self.get_coordinate_range(chromosome)
             bin_count = self.get_bin_count(min_coord, max_coord)
             record = {'chromosome': chromosome, 'first_bin': end_bin+1, 'last_bin': end_bin+bin_count, 'min_coord': min_coord, 'max_coord': max_coord}
@@ -68,10 +81,13 @@ class scData(Savable):
         return pd.DataFrame(records)
 
     def isolate_chromosome(self, chromosome):
-        self.df = self.df[(self.df["chrom1"] == chromosome) & (self.df["chrom2"] == chromosome)]
+        if not chromosome:
+            self.df = self.base_df
+        else:
+            self.df = self.base_df[(self.base_df["chrom1"] == chromosome) & (self.base_df["chrom2"] == chromosome)]
 
     def get_coordinate_range(self, chromosome):
-        df_for_chromosome = self.df[(self.df['chrom1'] == chromosome) & (self.df["chrom2"] == chromosome)]
+        df_for_chromosome = self.base_df[(self.base_df['chrom1'] == chromosome) & (self.base_df["chrom2"] == chromosome)]
         coords = np.concatenate([df_for_chromosome["coord1"].values, df_for_chromosome["coord2"].values])
         min_coord = min(coords)
         max_coord = max(coords)
@@ -118,3 +134,43 @@ class scData(Savable):
     def pair_score(self, i, j, x, y):
         mu2 = 2
         return math.exp(-(pow(x-i, 2) / mu2 + pow(y-j, 2) / mu2))
+
+    def is_raw(self):
+        return self.contact_matrix is None or self.resolution is None
+
+    def save(self, file_path=None):
+        if not file_path:
+            if self.is_raw():
+                file_path = f"data/raw_data.pkl"
+            else:
+                file_path = f"data/chrom{self.chromosome}_res{self.resolution}.pkl"
+        with open(file_path, 'wb') as file:
+            pickle.dump(self, file)
+
+
+class Model():
+
+    def __init__(self, data, delta0=5, theta1=0.7, beta=1, tau=1, mu1=20, rho=1, phi=0.1):
+        if data.is_raw():
+            raise ValueError("Provided data has not been processed")
+        self.data = data
+        self.walk = model_init.SARW(self.data.bin_count, 100)
+
+        self.delta0 = delta0
+        self.theta1 = theta1
+        self.beta = beta
+        self.tau = tau
+        self.mu1 = mu1
+        self.rho = rho
+        self.phi = phi
+    
+    def delta(self, i, j):
+        return self.delta0 / pow(min(1, self.data.theta_matrix[i][j]), 1/3)
+
+    @property
+    def delta1(self):
+        return self.delta0 / pow(min(1, self.theta1), 1/3)
+
+    def d(self, walk, i, j):
+        return model_init.Field.get_distance(walk[i], walk[j])
+

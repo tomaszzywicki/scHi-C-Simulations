@@ -10,7 +10,10 @@ chrom5_data = f"data/chrom{chrom_num}_{resolution}.pkl"
 
 if __name__ == "__main__":
     # data = model_evolver.scData(data_file_path)
-    # data.prep(resolution=1e6, chromosome=chrom_num)
-    # data.save(chrom5_data)
-    data = model_evolver.scData.load(chrom5_data)
+    # data.save()
+    data = model_evolver.scData.load("data/chromALL_res10000000.pkl")
+    # chromosomes = data.get_chromosome_list()
+    # for chromosome in chromosomes:
+    #     data.prep(resolution=1e7, chromosome=chromosome)
+        # data.save()
     data.scHiC_matrix()

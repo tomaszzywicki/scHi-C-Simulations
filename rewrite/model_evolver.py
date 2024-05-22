@@ -136,7 +136,7 @@ class scData(Savable):
         return math.exp(-(pow(x-i, 2) / mu2 + pow(y-j, 2) / mu2))
 
     def is_raw(self):
-        return self.contact_matrix is None or self.resolution is None
+        return self.resolution is None or self.contact_matrix is None or self.theta_matrix is None
 
     def save(self, file_path=None):
         if not file_path:

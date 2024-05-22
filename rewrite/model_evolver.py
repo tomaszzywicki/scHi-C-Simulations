@@ -171,18 +171,23 @@ class Model():
     def score_to_prob(self, score):
         percentage = (score - self.evaluation_score) / self.evaluation_score * 100
         x = max(0, 3 + percentage)
-        print(f"score: {score}\tcurrent score: {self.evaluation_score}\tpercentage: {percentage}\tx: {x}")
-        return chi2.pdf(x, 2)
+        # print(f"score: {score}\tcurrent score: {self.evaluation_score}\tpercentage: {percentage}\tx: {x}")
+        prob = chi2.pdf(x, 2)
+        if percentage < 0:
+            return prob * 2
+        return prob / 2
         
 
     def evolve(self, iterations=500, step=5):
 
         for i in range(iterations):
-            print(f"after iteration {i}: {round(self.evaluation_score,2)}")
+            if i%100==0:
+                print(f"after iteration {i}: {round(self.evaluation_score,2)}")
             candidate, changed_index = self.generate_sibling_walks(count=1, step=step)
             candidate_score = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
             candidate_prob = self.score_to_prob(candidate_score)
-            print(f"candidate prob: {round(candidate_prob,2)}")
+            if i%100==0:
+                print(f"candidate prob: {round(candidate_prob,2)}")
             acceptance_prob = min(1, candidate_prob)
             if random.uniform(0, 1) < acceptance_prob:
                 self.walk.walk = candidate

@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 import pickle
 import math
+import copy
 
 import model_init
 
@@ -19,12 +21,13 @@ class Savable():
 
 class scData(Savable):
 
-    def __init__(self, filepath, sep='\t'):
+    def __init__(self, filepath, sep='\t', mu2=2):
         self.base_df = pd.read_csv(filepath, sep=sep)
         self.resolution = None
         self.chromosome = None
         self.contact_matrix = None
         self.theta_matrix = None
+        self.mu2 = mu2
     
     def prep(self, chromosome=None, resolution=1e7):
         self.isolate_chromosome(chromosome)
@@ -59,16 +62,19 @@ class scData(Savable):
         plt.ylabel('Genomic Bins')
         plt.show()
     
-    def get_chromosome_list(self):
-        chromosomes1 = self.base_df["chrom1"].unique()
-        chromosomes2 = self.base_df["chrom2"].unique()
+    def get_chromosome_list(self, df=None):
+
+        if df is None:
+            df = self.base_df
+
+        chromosomes1 = df["chrom1"].unique()
+        chromosomes2 = df["chrom2"].unique()
         chrom_list = np.unique(np.concatenate((chromosomes1, chromosomes2), axis=0))
         sorted_chromosomes = sorted(chrom_list, key=lambda x: int(x) if x.isdigit() else float('inf'))
         return sorted_chromosomes
 
     def get_all_chromosomes(self):
-        chromosomes = self.get_chromosome_list()
-        print(chromosomes)
+        chromosomes = self.get_chromosome_list(self.df)
         records = []
         end_bin = -1
         for chromosome in chromosomes:
@@ -132,8 +138,7 @@ class scData(Savable):
         return theta_matrix
 
     def pair_score(self, i, j, x, y):
-        mu2 = 2
-        return math.exp(-(pow(x-i, 2) / mu2 + pow(y-j, 2) / mu2))
+        return math.exp(-(pow(x-i, 2) / self.mu2 + pow(y-j, 2) / self.mu2))
 
     def is_raw(self):
         return self.resolution is None or self.contact_matrix is None or self.theta_matrix is None
@@ -148,13 +153,16 @@ class scData(Savable):
             pickle.dump(self, file)
 
 
-class Model():
+class Model(Savable):
 
-    def __init__(self, data, delta0=5, theta1=0.7, beta=1, tau=1, mu1=20, rho=1, phi=0.1):
+    def __init__(self, data, delta0=8, theta1=0.7, beta=1, tau=1, mu1=20, rho=1, phi=0.1):
+
         if data.is_raw():
             raise ValueError("Provided data has not been processed")
+
         self.data = data
-        self.walk = model_init.SARW(self.data.bin_count, 100)
+        self.n = data.bin_count
+        self.walk = model_init.SARW(self.n, 100)
 
         self.delta0 = delta0
         self.theta1 = theta1
@@ -163,6 +171,38 @@ class Model():
         self.mu1 = mu1
         self.rho = rho
         self.phi = phi
+
+        self.evaluation_score = self.evaluate(self.walk.walk)
+
+    def evolve(self, iterations=500, step=5):
+
+        for i in range(iterations):
+            best_evaluation = self.evaluation_score
+            print(f"after iteration {i}: ", round(best_evaluation, 2))
+            best_candidate = self.walk.walk
+            candidates, changed_index = self.generate_sibling_walks(step=step)
+            for candidate in candidates:
+                evaluation = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
+                if evaluation < best_evaluation:
+                    best_evaluation = evaluation
+                    best_candidate = candidate
+                
+            self.walk.walk = best_candidate
+            self.evaluation_score = best_evaluation
+
+    def generate_sibling_walks(self, count=10, index_to_modify=None, step=5):
+        if not index_to_modify:
+            index_to_modify = random.randint(0, self.data.bin_count-1)
+
+        new_walks = []
+        for i in range(count):
+            new_walk = copy.deepcopy(self.walk.walk)
+            new_walk[index_to_modify].x += random.uniform(-step,step)
+            new_walk[index_to_modify].y += random.uniform(-step,step)
+            new_walk[index_to_modify].z += random.uniform(-step,step)
+            new_walks.append(new_walk)
+
+        return new_walks, index_to_modify
     
     def delta(self, i, j):
         return self.delta0 / pow(min(1, self.data.theta_matrix[i][j]), 1/3)
@@ -174,3 +214,34 @@ class Model():
     def d(self, walk, i, j):
         return model_init.Field.get_distance(walk[i], walk[j])
 
+    def evaluate(self, walk):
+        result = 0
+        for i in range(self.n-1):
+            for j in range(i+1, self.n):
+                result += self.pair_score(walk, i, j)
+        return result
+        
+    def reevaluate(self, old_walk, new_walk, changed_index):
+        result = self.evaluation_score
+        i = changed_index
+        for j in range(self.n):
+            if j == i:
+                continue
+            result -= self.pair_score(old_walk, i, j)
+            result += self.pair_score(new_walk, i, j)
+        return result
+
+    def pair_score(self, walk, i, j):
+
+        if i > j:
+            i, j = j, i
+
+        if self.data.contact_matrix[i][j] >= 1 or self.data.theta_matrix[i][j] == 1:
+            return pow(self.d(walk, i, j) - self.delta0, 2) / pow(self.delta0, 2)
+        elif self.theta1 < self.data.theta_matrix[i][j]:
+            return self.beta * (1 - math.exp(-(pow(self.d(walk, i, j) - self.delta(i, j), 2) / self.mu1)))
+        else:
+            return self.tau * (1 - 1 / (1 + math.exp(-(self.d(walk, i, j) - (self.delta1 - self.rho)) / self.phi)))
+
+    def plot(self):
+        self.walk.plot()

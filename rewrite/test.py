@@ -20,10 +20,10 @@ def prep_data(resolution=1e7):
 
 if __name__ == "__main__":
     # prep_data(resolution=1e6)
-    # data = model_evolver.scData.load("data/chrom1_res1000000.pkl")
+    # data = model_evolver.load("data/chrom1_res1000000.pkl")
     # data.scHiC_matrix()
     # model = model_evolver.Model(data)
-    model = model_evolver.Model.load("models/new.pkl")
+    model = model_evolver.load("models/new.pkl")
     model.plot()
     model.evolve(iterations=1000, step=1)
     model.save("models/new.pkl")

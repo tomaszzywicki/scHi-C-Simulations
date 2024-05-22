@@ -8,18 +8,11 @@ import copy
 
 import model_init
 
-class Savable():
+def load(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
 
-    def save(self, file_path):
-        with open(file_path, 'wb') as file:
-            pickle.dump(self, file)
-    
-    @staticmethod
-    def load(file_path):
-        with open(file_path, 'rb') as file:
-            return pickle.load(file)
-
-class scData(Savable):
+class scData():
 
     def __init__(self, filepath, sep='\t', mu2=2):
         self.base_df = pd.read_csv(filepath, sep=sep)
@@ -153,7 +146,7 @@ class scData(Savable):
             pickle.dump(self, file)
 
 
-class Model(Savable):
+class Model():
 
     def __init__(self, data, delta0=8, theta1=0.7, beta=1, tau=1, mu1=20, rho=1, phi=0.1):
 
@@ -245,3 +238,7 @@ class Model(Savable):
 
     def plot(self):
         self.walk.plot()
+
+    def save(self, file_path):
+        with open(file_path, 'wb') as file:
+            pickle.dump(self, file)

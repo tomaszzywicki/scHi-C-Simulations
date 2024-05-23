@@ -20,11 +20,14 @@ def prep_data(resolution=1e7):
 
 if __name__ == "__main__":
     # prep_data(resolution=1e6)
-    # data = model_evolver.load("data/chrom1_res1000000.pkl")
+    # data = model_evolver.scData(data_file_path)
+    # data.prep(chromosome="1", resolution=5e5)
+    # data.save()
     # data.scHiC_matrix()
+    # data = model_evolver.load("data/chrom1_res500000.pkl")
     # model = model_evolver.Model(data)
-    model = model_evolver.Model.load("models/km4test.pkl")
+    model = model_evolver.load("models/high_res3test.pkl")
     model.plot()
-    model.evolve(iterations=10000, step=4)
-    model.save("models/km4test.pkl")
+    model.evolve(iterations=200000, step=0.01)
+    model.save("models/high_res3test.pkl")
     model.plot()

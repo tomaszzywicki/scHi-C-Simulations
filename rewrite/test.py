@@ -28,6 +28,6 @@ if __name__ == "__main__":
     # model = model_evolver.Model(data)
     model = model_evolver.load("models/high_res3test.pkl")
     model.plot()
-    model.evolve(iterations=200000, step=0.01)
+    model.evolve(iterations=10000, step=0.01)
     model.save("models/high_res3test.pkl")
     model.plot()

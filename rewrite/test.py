@@ -34,10 +34,8 @@ if __name__ == "__main__":
     # ----- TESTING ----- 
     data = model_evolver.load("data/chrom1_res1000000.pkl")
     model = model_evolver.Model(data)
-    model.evolve_simulated_annealing(iterations=10000, step=5)
-    model.save("models/sim_ann_test3.pkl")
-    model = model_evolver.load("models/sim_ann_test3.pkl")
-    model.evolve_simulated_annealing(iterations=10000, step=5)
+    model.evolve_simulated_annealing(iterations=100, step=5)
+    model.print_walk_history()
     # model.plot()
     # step = 5
     # while(step >= 0.1):

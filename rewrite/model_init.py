@@ -110,6 +110,9 @@ class SARW(RandomWalk):
 
         chosen_child = np.random.choice(potential_children)
         return chosen_child
+    
+    def get_field(self, index):
+        return self.walk[index]
 
 class Field():
 

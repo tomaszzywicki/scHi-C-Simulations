@@ -157,6 +157,9 @@ class Model():
         self.data = data
         self.n = data.bin_count
         self.walk = model_init.SARW(self.n, 100)
+        self.init_walk = copy.deepcopy(self.walk)
+        self.walk_history = []
+        self.score_history = []
 
         self.delta0 = delta0
         self.theta1 = theta1
@@ -167,6 +170,7 @@ class Model():
         self.phi = phi
 
         self.evaluation_score = self.evaluate(self.walk.walk)
+        self.score_history.append(self.evaluation_score)
 
     def score_to_prob(self, score):
         percentage = (score - self.evaluation_score) / self.evaluation_score * 100
@@ -203,18 +207,30 @@ class Model():
             candidate_score = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
 
             if candidate_score < self.evaluation_score:
-                self.walk.walk = candidate
-                self.evaluation_score = candidate_score
+                self.accept_candidate(candidate, candidate_score, changed_index)
             else:
                 if random.uniform(0, 1) < math.exp(-(1 + (self.evaluation_score - candidate_score) / self.evaluation_score) / temperature):
-                    self.walk.walk = candidate
-                    self.evaluation_score = candidate_score
+                    self.accept_candidate(candidate, candidate_score, changed_index)
             temperature *= cooling_rate
         
         print(f"MODEL EVOLVED (step: {step})")
         print(f"initial score: {round(start_score,2)}")
         print(f"final score: {round(self.evaluation_score,2)}")
         return self.walk
+    
+    def accept_candidate(self, candidate, candidate_score, changed_index):
+        self.walk.walk = candidate
+        self.evaluation_score = candidate_score
+        self.walk_history.append((changed_index, self.walk.get_field(changed_index)))
+        self.score_history.append(self.evaluation_score)
+
+    def plot_animated_walk_history(self):
+        ## i want to start with initial walk and then show the changes in the walk
+        pass
+
+    def print_walk_history(self):
+        for i, field in self.walk_history:
+            print(f"index: {i}\tfield: {field}")
 
     def generate_sibling_walks(self, count=10, index_to_modify=None, step=5):
         if not index_to_modify:

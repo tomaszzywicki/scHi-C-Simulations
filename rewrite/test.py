@@ -23,8 +23,32 @@ if __name__ == "__main__":
     # data = model_evolver.load("data/chrom1_res1000000.pkl")
     # data.scHiC_matrix()
     # model = model_evolver.Model(data)
-    model = model_evolver.load("models/km4test.pkl")
-    model.plot()
-    model.evolve(iterations=300000, step=0.2)
-    model.save("models/km4test.pkl")
-    model.plot()
+    # model = model_evolver.load("models/2M_1e6_c1.pkl")
+    # model.plot()
+    # model.evolve_simulated_annealing(iterations=10000, step=5)
+    # model.evolve(iterations=50000, step=5)
+    # model.save("models/sim_ann_test.pkl")
+    # model.plot()
+    # model.show_info()   
+
+    # ----- TESTING ----- 
+    data = model_evolver.load("data/chrom1_res1000000.pkl")
+    model = model_evolver.Model(data)
+    model.evolve_simulated_annealing(iterations=10000, step=5)
+    model.save("models/sim_ann_test3.pkl")
+    model = model_evolver.load("models/sim_ann_test3.pkl")
+    model.evolve_simulated_annealing(iterations=10000, step=5)
+    # model.plot()
+    # step = 5
+    # while(step >= 0.1):
+    #     model.evolve_simulated_annealing(iterations=10000, step=step)
+    #     if step > 1:
+    #         step -= 0.5
+    #     elif step > 0.5:
+    #         step -= 0.1
+    #     else:
+    #         step -= 0.02
+    #     step = round(step, 2)
+    # model.save("models/sim_ann_test2.pkl")
+    # model.plot()    
+    

@@ -193,6 +193,28 @@ class Model():
                 self.walk.walk = candidate
                 self.evaluation_score = candidate_score
 
+    def evolve_simulated_annealing(self, iterations=500, step=5, initial_temperature=1.0, cooling_rate=0.997):
+        temperature = initial_temperature
+        start_score = self.evaluation_score
+        for i in range(iterations):
+            if i%100==0:
+                print(f"after iteration {i}: {round(self.evaluation_score,2)}")
+            candidate, changed_index = self.generate_sibling_walks(count=1, step=step)
+            candidate_score = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
+
+            if candidate_score < self.evaluation_score:
+                self.walk.walk = candidate
+                self.evaluation_score = candidate_score
+            else:
+                if random.uniform(0, 1) < math.exp(-(1 + (self.evaluation_score - candidate_score) / self.evaluation_score) / temperature):
+                    self.walk.walk = candidate
+                    self.evaluation_score = candidate_score
+            temperature *= cooling_rate
+        
+        print(f"MODEL EVOLVED (step: {step})")
+        print(f"initial score: {round(start_score,2)}")
+        print(f"final score: {round(self.evaluation_score,2)}")
+        return self.walk
 
     def generate_sibling_walks(self, count=10, index_to_modify=None, step=5):
         if not index_to_modify:

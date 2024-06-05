@@ -20,7 +20,9 @@ class RandomWalk(ABC):
         if self.volume < self.node_count:
             raise ValueError(f"Invalid parameters for walk object:\n{self.__str__()}\nGrid is too small to contain this walk. Consider changing grid_size or node_count values.")
 
-    def get_coords(self, walk):
+    def get_coords(self, walk=None):
+        if walk is None:
+            walk = self.walk
         x = [field.x for field in walk]
         y = [field.y for field in walk]
         z = [field.z for field in walk]

@@ -1,3 +1,4 @@
+from matplotlib.animation import FuncAnimation
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -160,6 +161,7 @@ class Model():
         self.init_walk = copy.deepcopy(self.walk)
         self.walk_history = []
         self.score_history = []
+        self.extended_score_history = []
 
         self.delta0 = delta0
         self.theta1 = theta1
@@ -171,6 +173,7 @@ class Model():
 
         self.evaluation_score = self.evaluate(self.walk.walk)
         self.score_history.append(self.evaluation_score)
+        self.extended_score_history.append(self.evaluation_score)
 
     def score_to_prob(self, score):
         percentage = (score - self.evaluation_score) / self.evaluation_score * 100
@@ -205,28 +208,29 @@ class Model():
                 print(f"after iteration {i}: {round(self.evaluation_score,2)}")
             candidate, changed_index = self.generate_sibling_walks(count=1, step=step)
             candidate_score = self.reevaluate(old_walk=self.walk.walk, new_walk=candidate, changed_index=changed_index)
-
+            candidate_accepted = False
             if candidate_score < self.evaluation_score:
-                self.accept_candidate(candidate, candidate_score, changed_index)
+                candidate_accepted = True
             else:
                 if random.uniform(0, 1) < math.exp(-(1 + (self.evaluation_score - candidate_score) / self.evaluation_score) / temperature):
-                    self.accept_candidate(candidate, candidate_score, changed_index)
+                    candidate_accepted = True
             temperature *= cooling_rate
+            
+            self.accept_candidate(candidate, candidate_score, changed_index, candidate_accepted)
+
         
         print(f"MODEL EVOLVED (step: {step})")
         print(f"initial score: {round(start_score,2)}")
         print(f"final score: {round(self.evaluation_score,2)}")
         return self.walk
     
-    def accept_candidate(self, candidate, candidate_score, changed_index):
-        self.walk.walk = candidate
-        self.evaluation_score = candidate_score
-        self.walk_history.append((changed_index, self.walk.get_field(changed_index)))
-        self.score_history.append(self.evaluation_score)
-
-    def plot_animated_walk_history(self):
-        ## i want to start with initial walk and then show the changes in the walk
-        pass
+    def accept_candidate(self, candidate, candidate_score, changed_index, candidate_accepted):
+        if candidate_accepted:
+            self.walk.walk = candidate
+            self.evaluation_score = candidate_score
+            self.walk_history.append((changed_index, self.walk.get_field(changed_index), len(self.extended_score_history)))
+            self.score_history.append(round(self.evaluation_score,2))
+        self.extended_score_history.append(round(self.evaluation_score,2))
 
     def print_walk_history(self):
         for i, field in self.walk_history:
@@ -291,6 +295,65 @@ class Model():
     def plot(self):
         self.walk.plot()
 
+    def plot_walk_history(self, start_iter=0):
+        x, y, z = self.init_walk.get_coords()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        score_text = fig.text(0, 1, "", transform=ax.transAxes)
+        iter_text = fig.text(0, 0.95, "", transform=ax.transAxes)
+        if start_iter > len(self.walk_history):
+            raise ValueError("Iteration number too BIG BIG")
+        
+        for i in range(start_iter):
+            change = self.walk_history[i]
+            index = change[0]
+            x[index] = change[1].x
+            y[index] = change[1].y
+            z[index] = change[1].z
+        
+        # Update function for the animation
+        def update(num):
+            num += start_iter
+            change = self.walk_history[num]
+            index = change[0]
+            x[index] = change[1].x
+            y[index] = change[1].y
+            z[index] = change[1].z
+            if num%5==0:
+                ax.clear()
+                ax.plot(x, y, z)
+                ax.set_xlabel('X')
+                ax.set_ylabel('Y')
+                ax.set_zlabel('Z')
+
+            score = self.score_history[num]
+            score_text.set_text(f"Score: {score}")
+            iter_text.set_text(f"Iteration: {change[2]}")
+
+
+        ani = FuncAnimation(fig, update, frames=len(self.walk_history) - start_iter, repeat=False, interval=1)
+
+        plt.show()
+
+    def plot_score_history(self, start_iter=0, end_iter=None, brief=False):
+        if brief:
+            history = self.score_history
+        else:
+            history = self.extended_score_history
+        if not end_iter:
+            end_iter = len(history)
+        plt.plot(range(start_iter, end_iter), history[start_iter:end_iter])
+        plt.title(f"{'Brief' if brief else 'Extended'} score history")
+        plt.show()
+    
+    @property 
+    def age(self):
+        return len(self.walk_history)
+    
+    @property
+    def iteration_count(self):
+        return len(self.extended_score_history)
+    
     def save(self, file_path):
         with open(file_path, 'wb') as file:
             pickle.dump(self, file)

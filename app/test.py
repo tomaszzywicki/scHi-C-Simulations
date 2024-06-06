@@ -34,10 +34,8 @@ if __name__ == "__main__":
     # ----- TESTING ----- 
     # data = model_evolver.load("data/chrom1_res1000000.pkl")
     # model = model_evolver.Model(data)
-    model = model_evolver.load("models/oskar_pjastri.pkl")
+    model = model_evolver.load("models/FINAL.pkl")
+    model.model_to_pdb()
     # model.evolve_simulated_annealing(iterations=10000, step=5)
-    model.save("models/oskar_pjastri.pkl")
-    model.plot_score_history(start_iter=3000, end_iter=4000)
-    model.plot_walk_history()
     # model.plot()  
     

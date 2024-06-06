@@ -9,6 +9,7 @@ import copy
 from scipy.stats import chi2
 
 import model_init
+from points_io import save_points_as_pdb
 
 def load(file_path):
     with open(file_path, 'rb') as file:
@@ -369,3 +370,8 @@ class Model():
     def save(self, file_path):
         with open(file_path, 'wb') as file:
             pickle.dump(self, file)
+
+    def model_to_pdb(self):
+        x, y, z = self.walk.get_coords()
+        points = np.array([x, y, z]).T
+        save_points_as_pdb(points, f"final.pdb")

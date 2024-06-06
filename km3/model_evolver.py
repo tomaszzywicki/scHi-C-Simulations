@@ -7,6 +7,7 @@ import copy
 import pickle
 
 import model_init
+from points_io import save_points_as_pdb
 
 class scData():
     
@@ -209,3 +210,8 @@ class Model():
     def load_from_file(file_path):
         with open(file_path, 'rb') as file:
             return pickle.load(file)
+
+    def model_to_pdb(self):
+        x, y, z = self.walk.get_coords()
+        points = np.array([x, y, z]).T
+        save_points_as_pdb(points, "path.pdb")

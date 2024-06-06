@@ -12,7 +12,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title('Chromatine visualizer')
-        self.geometry('1200x800')
+        self.geometry('1300x800')
         self.resizable(False, False)
 
         self.orange = "#FF8000"
@@ -73,25 +73,54 @@ class App(ctk.CTk):
         self.plot_frame.grid(row=1, column=1, padx=20, pady=10, sticky='wn')
 
         self.train_model_label = ctk.CTkLabel(self.model_frame, text='Train model', font=("Open Sans", 20, "bold"), text_color=self.blue)
-        self.train_model_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10, sticky='w')
+        self.train_model_label.grid(row=0, column=0, padx=10, pady=10, sticky='w')
+        self.model_name_label = ctk.CTkLabel(self.model_frame, text="", font=("Open Sans", 20, "bold"), text_color=self.orange)
+        self.model_name_label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
         self.plot_initial_model_button = ctk.CTkButton(self.button_frame, text="Plot initial model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_initial_model)
-        self.plot_initial_model_button.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.plot_initial_model_button.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
         self.plot_current_model_button = ctk.CTkButton(self.button_frame, text="Plot current model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_model)
-        self.plot_current_model_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        self.plot_current_model_button.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
         self.plot_score_history_button = ctk.CTkButton(self.button_frame, text="Plot score history", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_score_history)
-        self.plot_score_history_button.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
-
+        self.plot_score_history_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
         self.train_model_button = ctk.CTkButton(self.button_frame, text="Train model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.train_model)
-        self.train_model_button.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
-
-        self.train_iter_entry = ctk.CTkEntry(self.button_frame, placeholder_text="Number of iterations", font=("Open Sans", 14))
-        self.train_iter_entry.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+        self.train_model_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+        self.train_iter_entry = ctk.CTkEntry(self.button_frame, placeholder_text="Iterations", font=("Open Sans", 14))
+        self.train_iter_entry.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
         
-        self.canvas = ctk.CTkCanvas(self.plot_frame, width=300, height=225)
+        self.save_model_button = ctk.CTkButton(self.button_frame, text="Save model", font=("Open Sans", 14, "bold"), fg_color=self.blue, text_color="black", command=self.save_model)
+        self.save_model_button.grid(row=5, column=0, padx=10, pady=10, sticky="ews")
+        self.load_model_button = ctk.CTkButton(self.button_frame, text="Load model", font=("Open Sans", 14, "bold"), fg_color=self.blue, text_color="black", command=self.load_model)
+        self.load_model_button.grid(row=5, column=1, padx=10, pady=10, sticky="ews")
+
+        self.model_name_entry = ctk.CTkEntry(self.button_frame, placeholder_text="Model name", font=("Open Sans", 14))
+        self.model_name_entry.grid(row=6, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+        self.plot_walk_history_button = ctk.CTkButton(self.button_frame, text="Plot walk history", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_walk_history)
+        self.plot_walk_history_button.grid(row=7, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+        self.canvas = ctk.CTkCanvas(self.plot_frame, width=640, height=480)
         self.canvas.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
         self.zoom_button = ctk.CTkButton(self.plot_frame, text="Zoom", font=("Open Sans", 14, "bold"), fg_color=self.blue, text_color="black", command=self.zoom_model)
         self.zoom_button.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
+    def save_model(self):
+        
+        model_name = self.model_name_entry.get()
+        model_file_path = f"models/{model_name}.pkl"
+
+        self.model.save(model_file_path)
+        self.on_model_loaded()
+
+    def load_model(self):
+        
+        model_name = self.model_name_entry.get()
+        model_file_path = f"models/{model_name}.pkl"
+
+        try:
+            self.model = model_evolver.load(model_file_path)
+            self.on_model_loaded()
+        except:
+            print("trouble loading the model")
     
     def zoom_model(self):
         self.model.plot()
@@ -130,7 +159,6 @@ class App(ctk.CTk):
         empty_photo = ctk.CTkImage(Image.new("RGB", (300, 225), "#444444"), size=(300,225))
         self.data_plotted.configure(image=empty_photo, text="No data file found")
         self.data_plotted.image = empty_photo
-        print("not ready")
         self.create_model_button.configure(state="disabled", fg_color="lightgray", text_color="white")
 
     def plot_data(self):
@@ -148,6 +176,7 @@ class App(ctk.CTk):
 
     def create_model(self):
         self.model = model_evolver.Model(self.data)
+        self.on_model_loaded()
 
     def run(self):
         self.mainloop()
@@ -156,7 +185,6 @@ class App(ctk.CTk):
         if fig is None:
             fig = self.model.plot(show=False)
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
-        self.canvas_fig = fig
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
         plt.close()
@@ -167,6 +195,9 @@ class App(ctk.CTk):
     def plot_score_history(self):
         self.plot_model(self.model.plot_score_history(show=False))
 
+    def plot_walk_history(self):
+        self.model.plot_walk_history()
+
     def train_model(self):
         try:
             iterations = int(self.train_iter_entry.get())
@@ -174,6 +205,11 @@ class App(ctk.CTk):
             print("Invalid number of iterations")
             iterations = 100
         self.model.evolve_simulated_annealing(iterations=iterations)
+        self.plot_model()
+    
+    def on_model_loaded(self):
+        print(self.model.name)
+        self.model_name_label.configure(text=self.model.name)
         self.plot_model()
     
 # class AskForName(ctk.CTk):

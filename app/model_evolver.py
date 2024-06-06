@@ -165,6 +165,7 @@ class Model():
         self.walk_history = []
         self.score_history = []
         self.extended_score_history = []
+        self.name = "unnknown"
 
         self.delta0 = delta0
         self.theta1 = theta1

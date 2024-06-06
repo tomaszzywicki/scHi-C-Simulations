@@ -98,6 +98,11 @@ class App(ctk.CTk):
         self.plot_walk_history_button = ctk.CTkButton(self.button_frame, text="Plot walk history", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_walk_history)
         self.plot_walk_history_button.grid(row=7, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
+        self.chrom_label = ctk.CTkLabel(self.plot_frame, text="", font=("Open Sans", 14, "bold"), text_color=self.orange)
+        self.chrom_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+        self.res_label = ctk.CTkLabel(self.plot_frame, text="", font=("Open Sans", 14, "bold"), text_color=self.orange)
+        self.res_label.grid(row=0, column=1, padx=20, pady=10, sticky="w")
+
         self.canvas = ctk.CTkCanvas(self.plot_frame, width=640, height=480)
         self.canvas.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
         self.zoom_button = ctk.CTkButton(self.plot_frame, text="Zoom", font=("Open Sans", 14, "bold"), fg_color=self.blue, text_color="black", command=self.zoom_model)
@@ -108,6 +113,7 @@ class App(ctk.CTk):
         model_name = self.model_name_entry.get()
         model_file_path = f"models/{model_name}.pkl"
 
+        self.model.name = model_name
         self.model.save(model_file_path)
         self.on_model_loaded()
 
@@ -197,6 +203,7 @@ class App(ctk.CTk):
 
     def plot_walk_history(self):
         self.model.plot_walk_history()
+        plt.close()
 
     def train_model(self):
         try:
@@ -211,6 +218,8 @@ class App(ctk.CTk):
         print(self.model.name)
         self.model_name_label.configure(text=self.model.name)
         self.plot_model()
+        self.chrom_label.configure(text=f"Chromosome: {self.model.data.chromosome}")
+        self.res_label.configure(text=f"Resolution: {self.model.data.resolution}")
     
 # class AskForName(ctk.CTk):
 

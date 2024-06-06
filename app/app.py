@@ -5,6 +5,7 @@ import os
 import io
 
 import model_evolver
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class App(ctk.CTk):
 
@@ -30,7 +31,7 @@ class App(ctk.CTk):
         self.label.grid(row=0, column=0, columnspan=2, padx=40, pady=40, sticky='w')
 
         self.data_frame = ctk.CTkFrame(self)
-        self.data_frame.grid(row=1, column=0, padx=20, sticky='w')
+        self.data_frame.grid(row=1, column=0, padx=20, sticky='wn')
 
         self.new_model_label = ctk.CTkLabel(self.data_frame, text='New model', font=("Open Sans", 20, "bold"), text_color=self.blue)
         self.new_model_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10, sticky='w')
@@ -60,8 +61,40 @@ class App(ctk.CTk):
 
         self.on_user_choice_changed(None)
 
+        self.generate_model_frame()
+
+    def generate_model_frame(self):
         self.model_frame = ctk.CTkFrame(self)
-        self.model_frame.grid(row=1, column=1, padx=20, sticky='w')
+        self.model_frame.grid(row=1, column=1, padx=20, sticky='wn')
+
+        self.button_frame = ctk.CTkFrame(self.model_frame)
+        self.plot_frame = ctk.CTkFrame(self.model_frame)
+        self.button_frame.grid(row=1, column=0, padx=20, pady=10, sticky='wn')
+        self.plot_frame.grid(row=1, column=1, padx=20, pady=10, sticky='wn')
+
+        self.train_model_label = ctk.CTkLabel(self.model_frame, text='Train model', font=("Open Sans", 20, "bold"), text_color=self.blue)
+        self.train_model_label.grid(row=0, column=0, columnspan=2, padx=20, pady=10, sticky='w')
+        self.plot_initial_model_button = ctk.CTkButton(self.button_frame, text="Plot initial model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_initial_model)
+        self.plot_initial_model_button.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.plot_current_model_button = ctk.CTkButton(self.button_frame, text="Plot current model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_model)
+        self.plot_current_model_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        self.plot_score_history_button = ctk.CTkButton(self.button_frame, text="Plot score history", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.plot_score_history)
+        self.plot_score_history_button.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+
+        self.train_model_button = ctk.CTkButton(self.button_frame, text="Train model", font=("Open Sans", 14, "bold"), fg_color=self.orange, text_color="black", command=self.train_model)
+        self.train_model_button.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+
+        self.train_iter_entry = ctk.CTkEntry(self.button_frame, placeholder_text="Number of iterations", font=("Open Sans", 14))
+        self.train_iter_entry.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+        
+        self.canvas = ctk.CTkCanvas(self.plot_frame, width=300, height=225)
+        self.canvas.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        self.zoom_button = ctk.CTkButton(self.plot_frame, text="Zoom", font=("Open Sans", 14, "bold"), fg_color=self.blue, text_color="black", command=self.zoom_model)
+        self.zoom_button.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+
+    
+    def zoom_model(self):
+        self.model.plot()
 
     def on_user_choice_changed(self, event):
         chromosome = self.chromosome_box.get()
@@ -114,39 +147,93 @@ class App(ctk.CTk):
         self.data_plotted.image = photo
 
     def create_model(self):
-        popup = AskForName()
-        popup.run()
+        self.model = model_evolver.Model(self.data)
 
     def run(self):
         self.mainloop()
     
-class AskForName(ctk.CTk):
+    def plot_model(self, fig=None):
+        if fig is None:
+            fig = self.model.plot(show=False)
+        self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
+        self.canvas_fig = fig
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        plt.close()
 
-    def __init__(self, master=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.title("Create new model")
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        width = 300
-        height = 200
-        x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
-        self.geometry(f"{width}x{height}+{x}+{y}")
-        self.resizable(False, False)
+    def plot_initial_model(self):
+        self.plot_model(self.model.init_walk.plot(show=False))
 
-        self.name_entry = ctk.CTkEntry(self, font=("Open Sans", 14), placeholder_text="Model name")
-        self.name_entry.grid(row=0, column=0, columnspan=2, sticky="ew")
+    def plot_score_history(self):
+        self.plot_model(self.model.plot_score_history(show=False))
 
-        self.cancel_button = ctk.CTkButton(self, text="Cancel", command=self.destroy, font=("Open Sans", 14, "bold"))
-        self.cancel_button.grid(row=1, column=0, sticky="ew")
-        self.create_button = ctk.CTkButton(self, text="Create", command=self.create_model, font=("Open Sans", 14, "bold"))
-        self.create_button.grid(row=1, column=1, sticky="ew")
+    def train_model(self):
+        try:
+            iterations = int(self.train_iter_entry.get())
+        except ValueError:
+            print("Invalid number of iterations")
+            iterations = 100
+        self.model.evolve_simulated_annealing(iterations=iterations)
+        self.plot_model()
     
-    def create_model(self):
-        print("creating model...")
+# class AskForName(ctk.CTk):
 
-    def run(self):
-        self.mainloop()
+#     def __init__(self, master=None):
+#         super().__init__()
+#         self.master = master
+#         self.title("Create new model")
+#         screen_width = self.winfo_screenwidth()
+#         screen_height = self.winfo_screenheight()
+#         width = 300
+#         height = 200
+#         x = (screen_width - width) // 2
+#         y = (screen_height - height) // 2
+#         self.geometry(f"{width}x{height}+{x}+{y}")
+#         self.resizable(False, False)
+
+#         self.canelled = True
+
+#         self.name_entry = ctk.CTkEntry(self, font=("Open Sans", 14), placeholder_text="Model name")
+#         self.name_entry.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+#         self.cancel_button = ctk.CTkButton(self, text="Cancel", command=self.after(100, self.destroy), font=("Open Sans", 14, "bold"))
+#         self.cancel_button.grid(row=1, column=0, sticky="ew")
+#         self.create_button = ctk.CTkButton(self, text="Create", command=self.create_model, font=("Open Sans", 14, "bold"))
+#         self.create_button.grid(row=1, column=1, sticky="ew")
+    
+#     def create_model(self):
+
+#         name = self.name_entry.get()
+#         print(name)
+
+#         self.after(100, self.destroy)
+
+#     def run(self):
+#         self.mainloop()
+
+# class ConfirmPopup(ctk.CTk):
+    
+#     def __init__(self, message="Are you sure?"):
+#         super().__init__()
+#         self.title("Confirm")
+#         self.geometry("300x200")
+#         self.resizable(False, False)
+#         self.confirmation = False
+
+#         self.label = ctk.CTkLabel(self, text=message, font=("Open Sans", 14))
+#         self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20)
+
+#         self.no_button = ctk.CTkButton(self, text="No", command=self.no)
+#         self.no_button.grid(row=1, column=0)
+#         self.yes_button = ctk.CTkButton(self, text="Yes", command=self.yes)
+#         self.yes_button.grid(row=1, column=1)
+
+#     def no(self):
+#         self.destroy()
+    
+#     def yes(self):
+#         self.confirmation = True
+#         self.destroy()
 
 if __name__ == '__main__':
     app = App()

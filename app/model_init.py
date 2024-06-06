@@ -28,15 +28,18 @@ class RandomWalk(ABC):
         z = [field.z for field in walk]
         return x, y, z
 
-    def plot(self):
+    def plot(self, show=True):
         x, y, z = self.get_coords(self.walk)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
         ax.plot(x, y, z)
+        # ax.axis("off")
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        plt.show()
+        if show:
+            plt.show()
+        return fig
 
     def get_ratio(self, a, b):
         return round(a / b * 100, 2)

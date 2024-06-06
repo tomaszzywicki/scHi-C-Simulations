@@ -295,8 +295,11 @@ class Model():
         else:
             return self.tau * (1 - 1 / (1 + math.exp(-(self.d(walk, i, j) - (self.delta1 - self.rho)) / self.phi)))
 
-    def plot(self):
-        self.walk.plot()
+    def plot(self, show=True):
+        fig = self.walk.plot(show=show)
+        fig.text(0.05, 0.9, f"Score: {round(self.evaluation_score,2)}")
+        fig.text(0.05, 0.85, f"Iteration: {len(self.extended_score_history) - 1}")
+        return fig
 
     def plot_walk_history(self, start_iter=0):
         x, y, z = self.init_walk.get_coords()
@@ -338,16 +341,21 @@ class Model():
 
         plt.show()
 
-    def plot_score_history(self, start_iter=0, end_iter=None, brief=False):
+    def plot_score_history(self, start_iter=0, end_iter=None, brief=False, show=True):
         if brief:
             history = self.score_history
         else:
             history = self.extended_score_history
         if not end_iter:
             end_iter = len(history)
-        plt.plot(range(start_iter, end_iter), history[start_iter:end_iter])
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        ax.plot(range(start_iter, end_iter), history[start_iter:end_iter])
+        # ax.plot(history[start_iter:end_iter])
         plt.title(f"{'Brief' if brief else 'Extended'} score history")
-        plt.show()
+        if show:
+            plt.show()
+        return fig
     
     @property 
     def age(self):
